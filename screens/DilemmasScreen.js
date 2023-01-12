@@ -29,10 +29,6 @@ const DilemmasScreen = ({ navigation: { goBack, navigate } }) => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   setQuestions(DilemmaApi());
-  // }, []);
-
   //State variable that keeps track of the selected answers
   const [answers, setAnswers] = useState({});
   console.log(answers);
