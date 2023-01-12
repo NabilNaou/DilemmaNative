@@ -52,8 +52,8 @@ const ChooseDepartment = ({ navigation }) => {
 
       <TouchableOpacity
         onPress={() => {
-          AsyncStorage.setItem("hasSeenWelcome", "true");
-          navigation.navigate("CommonScreens");
+          //AsyncStorage.setItem("hasSeenWelcome", "true");
+          navigation.navigate("InputName");
           sendDepartment(selected);
         }}
         style={[
