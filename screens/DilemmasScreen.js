@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Image, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Container from "../components/Container";
 import GlobalStyle from "../components/GlobalStyle";
-import axios from "axios";
+import axios from "../services/backendApi";
 import questions from "../components/Questions";
 import sendData from "../services/ScoreApi";
+import DilemmaApi from "../services/DilemmaApi";
 
 //TODO: separate the logic for rendering the question and answers from the DilemmasScreen component to make the code easier to read.
 const DilemmasScreen = ({ navigation: { goBack, navigate } }) => {
@@ -14,6 +15,23 @@ const DilemmasScreen = ({ navigation: { goBack, navigate } }) => {
   const [Patiëntenbelang, setPatiëntenbelang] = useState(0);
   const [IntegriteitPoints, setIntegriteitPoints] = useState(0);
   const [Informatiebeveiliging, setInformatiebeveiliging] = useState(0);
+
+  //questions
+  const [questions, setQuestions] = useState([]);
+
+  useEffect(() => {
+    if (questions == 0) {
+      axios
+        .get("http://localhost:5001/api/questions/ByActiveQuiz")
+        .then((response) => {
+          setQuestions(response.data);
+        });
+    }
+  }, []);
+
+  // useEffect(() => {
+  //   setQuestions(DilemmaApi());
+  // }, []);
 
   //State variable that keeps track of the selected answers
   const [answers, setAnswers] = useState({});
@@ -91,55 +109,65 @@ const DilemmasScreen = ({ navigation: { goBack, navigate } }) => {
     setSelectedAnswer(null);
   };
 
-  return (
-    <Container>
-      <View style={styles.rowone}>
-        <TouchableOpacity onPress={() => goBack()}>
-          <Image source={require("../assets/Back-arrow.png")} />
-        </TouchableOpacity>
-        <Text style={[GlobalStyle.CustomFont, { alignSelf: "center" }]}>
-          Dilemma{" "}
-          <Text style={[GlobalStyle.CustomFontBold, { fontSize: 30 }]}>
-            {currentQuestion}/{questions.length}
+  if (questions.length == 0) {
+    return <text>No Dilemma's Found</text>;
+  } else {
+    return (
+      <Container>
+        <View style={styles.rowone}>
+          <TouchableOpacity onPress={() => goBack()}>
+            <Image source={require("../assets/Back-arrow.png")} />
+          </TouchableOpacity>
+          <Text style={[GlobalStyle.CustomFont, { alignSelf: "center" }]}>
+            Dilemma{" "}
+            <Text style={[GlobalStyle.CustomFontBold, { fontSize: 30 }]}>
+              {currentQuestion}/{questions.length}
+            </Text>
           </Text>
-        </Text>
-      </View>
-      <Text>{questions[currentQuestion - 1].text}</Text>
-      {questions[currentQuestion - 1].answers.map((answer, index) => (
-        <View style={{ flexDirection: "row" }} key={answer.value}>
-          {/*A, B and C. fromCharCode converts unicode to characters.*/}
-          <Text>{String.fromCharCode(65 + index)}:</Text>
-          <TouchableOpacity onPress={() => handleAnswer(answer.value)}>
-            <Text> {answer.text}</Text>
-          </TouchableOpacity>
         </View>
-      ))}
-      <View style={styles.rowtwo}>
-        <TouchableOpacity
-          onPress={handlePrevious}
-          disabled={currentQuestion - 1 == 0}
-        >
-          <Text style={styles.previousButton}>Previous</Text>
-        </TouchableOpacity>
-
-        {currentQuestion === questions.length ? (
-          <TouchableOpacity onPress={handleFinish}>
-            <Text>Finish</Text>
-          </TouchableOpacity>
-        ) : (
+        <Text>{questions[currentQuestion - 1].description}</Text>
+        {questions[currentQuestion - 1].options.map((answer, index) => (
+          <View style={{ flexDirection: "row" }} key={index}>
+            {/*A, B and C. fromCharCode converts unicode to characters.*/}
+            <Text>{String.fromCharCode(65 + index)}:</Text>
+            <TouchableOpacity
+              onPress={() =>
+                handleAnswer(
+                  "abcdefghijklmnopqrstuvwxyz".charAt(index).toUpperCase()
+                )
+              }
+            >
+              <Text> {answer.description}</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <View style={styles.rowtwo}>
           <TouchableOpacity
-            style={styles.nextButton}
-            disabled={selectedAnswer === null}
-            onPress={() => {
-              handleNext();
-            }}
+            onPress={handlePrevious}
+            disabled={currentQuestion - 1 == 0}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
+            <Text style={styles.previousButton}>Previous</Text>
           </TouchableOpacity>
-        )}
-      </View>
-    </Container>
-  );
+
+          {currentQuestion === questions.length ? (
+            <TouchableOpacity onPress={handleFinish}>
+              <Text>Finish</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.nextButton}
+              disabled={selectedAnswer === null}
+              onPress={() => {
+                handleNext();
+              }}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </Container>
+    );
+  }
 };
 
 export default DilemmasScreen;
